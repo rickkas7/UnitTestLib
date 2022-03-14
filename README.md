@@ -31,6 +31,25 @@ git submodule update --init --recursive
 - Call make to build this module
 - Include libwiringgcc.a (static library) in your unit test binary
 - Include this directory in your header search list (-I)
+
+Here's the full Makefile for JsonParserGeneratorRK from the test directory:
+
+```
+all : JsonTest
+	./JsonTest
+
+JsonTest : JsonTest.cpp ../src/JsonParserGeneratorRK.cpp ../src/JsonParserGeneratorRK.h libwiringgcc
+	gcc JsonTest.cpp ../src/JsonParserGeneratorRK.cpp UnitTestLib/libwiringgcc.a -std=c++11 -lc++ -IUnitTestLib -I../src -o JsonTest
+
+check : JsonTest.cpp ../src/JsonParserGeneratorRK.cpp ../src/JsonParserGeneratorRK.h libwiringgcc
+	gcc JsonTest.cpp ../src/JsonParserGeneratorRK.cpp UnitTestLib/libwiringgcc.a -g -O0 -std=c++11 -lc++ -IUnitTestLib -I ../src -o JsonTest && valgrind --leak-check=yes ./JsonTest 
+
+libwiringgcc :
+	cd UnitTestLib && make libwiringgcc.a 	
+	
+.PHONY: libwiringgcc
+```
+
 - Include Particle.h in your unit test C++ source
 
 ```
@@ -40,15 +59,17 @@ git submodule update --init --recursive
 - To update the submodule if changes are made in this repository
 
 ```
+git submodule update --remote
 ```
 
 ## Examples
 
 - [JsonParserGeneratorRK](https://github.com/rickkas7/JsonParserGeneratorRK)
 
+
 ## Version History
 
 ### 0.0.1 (2022-03-14)
 
-- Extracted from 
+- Extracted from JsonParserGeneratorRK to a separate repository
 
