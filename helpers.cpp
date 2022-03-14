@@ -93,6 +93,8 @@ void Logger::error(const char *fmt, ...) {
 }
 */
 
+const Logger Log("app");
+
 uint32_t millis() {
     struct timespec ts;
 
