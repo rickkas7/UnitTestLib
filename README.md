@@ -62,6 +62,8 @@ libwiringgcc :
 git submodule update --remote
 ```
 
+Submodules are a little complex at first, but very useful and powerful. See the [Git submodule docs](https://git-scm.com/book/en/v2/Git-Tools-Submodules) for more information.
+
 ## Examples
 
 - [JsonParserGeneratorRK](https://github.com/rickkas7/JsonParserGeneratorRK)

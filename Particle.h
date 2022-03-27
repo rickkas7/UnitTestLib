@@ -156,4 +156,6 @@ namespace particle { namespace protocol {
 
 uint32_t millis();
 
+using namespace spark;
+
 #endif /* __PARTICLE_H */
