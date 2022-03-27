@@ -20,6 +20,10 @@
 #include "rng_hal.h"
 #include "system_tick_hal.h"
 
+using namespace spark;
+// using namespace particle;
+// using namespace std::literals::chrono_literals;
+
 class Stream {
 public:
 	inline int available() { return 0; }
@@ -140,6 +144,8 @@ public:
 
     String name;
 };
+// spark_wiring_logging.h
+extern const Logger Log;
 
 namespace particle { namespace protocol {
     const size_t MAX_OPTION_DELTA_LENGTH = 12;
