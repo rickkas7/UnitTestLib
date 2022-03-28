@@ -14,6 +14,7 @@
 
 #include <cassert>
 
+#include "spark_wiring_flags.h"
 #include "spark_wiring_json.h"
 #include "spark_wiring_string.h"
 #include "spark_wiring_time.h"
@@ -158,6 +159,23 @@ namespace particle { namespace protocol {
     const size_t MAX_VARIABLE_VALUE_LENGTH = 1024;
 
 }};
+
+// system_cloud.h
+const uint32_t PUBLISH_EVENT_FLAG_PUBLIC = 0x0;
+const uint32_t PUBLISH_EVENT_FLAG_PRIVATE = 0x1;
+const uint32_t PUBLISH_EVENT_FLAG_NO_ACK = 0x2;
+const uint32_t PUBLISH_EVENT_FLAG_WITH_ACK = 0x8;
+
+// spark_wiring_cloud.h
+struct PublishFlagType; // Tag type for Particle.publish() flags
+typedef particle::Flags<PublishFlagType, uint8_t> PublishFlags;
+typedef PublishFlags::FlagType PublishFlag;
+
+const PublishFlag PUBLIC(PUBLISH_EVENT_FLAG_PUBLIC);
+const PublishFlag PRIVATE(PUBLISH_EVENT_FLAG_PRIVATE);
+const PublishFlag NO_ACK(PUBLISH_EVENT_FLAG_NO_ACK);
+const PublishFlag WITH_ACK(PUBLISH_EVENT_FLAG_WITH_ACK);
+
 
 
 uint32_t millis();
