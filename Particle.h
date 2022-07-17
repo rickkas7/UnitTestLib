@@ -143,6 +143,45 @@ public:
         ::printf("%s %s: %s\n", name.c_str(), levelStr, buf);
     }
 
+    void write(const char *data, size_t size) const {
+        write(LOG_LEVEL_INFO, data, size);
+    }
+ 
+    void write(LogLevel level, const char *data, size_t size) const {
+        char buf[512];
+        if (size > (sizeof(buf) - 1)) {
+            size = sizeof(buf) - 1;
+        }
+        strncpy(buf, data, size);
+        buf[size] = 0;
+
+        ::printf("%s", buf);
+    }
+
+    void dump(const void *data, size_t size) const {
+        dump(LOG_LEVEL_TRACE, data, size);
+    }
+
+    void dump(LogLevel level, const void *data, size_t size) const {
+        static const char hex[] = "0123456789abcdef";
+        char buf[513]; // Hex data is flushed in chunks
+        buf[sizeof(buf) - 1] = 0; // Compatibility callback expects null-terminated strings
+        size_t offs = 0;
+        for (size_t i = 0; i < size; ++i) {
+            const uint8_t b = ((const uint8_t*)data)[i];
+            buf[offs++] = hex[b >> 4];
+            buf[offs++] = hex[b & 0x0f];
+            if (offs == sizeof(buf) - 1) {
+                printf("%s", buf);
+                offs = 0;
+            }
+        }
+        if (offs) {
+            buf[offs] = 0;
+            printf("%s", buf);
+        }   
+    }
+
     String name;
 };
 // spark_wiring_logging.h
