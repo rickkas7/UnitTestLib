@@ -28,8 +28,72 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include "spark_wiring_print.h"
+#include "spark_wiring_json.h"
+#include "spark_wiring_variant.h"
 #include "spark_wiring_string.h"
-#include "spark_wiring_stream.h"
+#include "spark_wiring_error.h"
+
+using namespace particle;
+
+namespace {
+
+void writeVariant(const Variant& var, JSONStreamWriter& writer) {
+    switch (var.type()) {
+    case Variant::NULL_: {
+        writer.nullValue();
+        break;
+    }
+    case Variant::BOOL: {
+        writer.value(var.value<bool>());
+        break;
+    }
+    case Variant::INT: {
+        writer.value(var.value<int>());
+        break;
+    }
+    case Variant::UINT: {
+        writer.value(var.value<unsigned>());
+        break;
+    }
+    case Variant::INT64: {
+        writer.value(var.value<int64_t>());
+        break;
+    }
+    case Variant::UINT64: {
+        writer.value(var.value<uint64_t>());
+        break;
+    }
+    case Variant::DOUBLE: {
+        writer.value(var.value<double>());
+        break;
+    }
+    case Variant::STRING: {
+        writer.value(var.value<String>());
+        break;
+    }
+    case Variant::ARRAY: {
+        writer.beginArray();
+        for (auto& v: var.value<VariantArray>()) {
+            writeVariant(v, writer);
+        }
+        writer.endArray();
+        break;
+    }
+    case Variant::MAP: {
+        writer.beginObject();
+        for (auto& e: var.value<VariantMap>().entries()) {
+            writer.name(e.first);
+            writeVariant(e.second, writer);
+        }
+        writer.endObject();
+        break;
+    }
+    default:
+        break;
+    }
+}
+
+} // namespace
 
 // Public Methods //////////////////////////////////////////////////////////////
 
@@ -60,52 +124,15 @@ size_t Print::print(char c)
   return write(c);
 }
 
-size_t Print::print(unsigned char b, int base)
-{
-  return print((unsigned long) b, base);
-}
-
-size_t Print::print(int n, int base)
-{
-  return print((long) n, base);
-}
-
-size_t Print::print(unsigned int n, int base)
-{
-  return print((unsigned long) n, base);
-}
-
-size_t Print::print(long n, int base)
-{
-  if (base == 0) {
-    return write(n);
-  } else if (base == 10) {
-    if (n < 0) {
-      int t = print('-');
-      n = -n;
-      return printNumber(n, 10) + t;
-    }
-    return printNumber(n, 10);
-  } else {
-    return printNumber(n, base);
-  }
-}
-
-size_t Print::print(unsigned long n, int base)
-{
-  if (base == 0) return write(n);
-  else return printNumber(n, base);
-}
-
-size_t Print::print(double n, int digits)
-{
-  return printFloat(n, digits);
-}
-
  size_t Print::print(const Printable& x)
  {
    return x.printTo(*this);
  }
+
+size_t Print::print(const __FlashStringHelper* str)
+{
+  return print(reinterpret_cast<const char*>(str));
+}
 
 size_t Print::println(void)
 {
@@ -128,48 +155,6 @@ size_t Print::println(char c)
   return n;
 }
 
-size_t Print::println(unsigned char b, int base)
-{
-  size_t n = print(b, base);
-  n += println();
-  return n;
-}
-
-size_t Print::println(int num, int base)
-{
-  size_t n = print(num, base);
-  n += println();
-  return n;
-}
-
-size_t Print::println(unsigned int num, int base)
-{
-  size_t n = print(num, base);
-  n += println();
-  return n;
-}
-
-size_t Print::println(long num, int base)
-{
-  size_t n = print(num, base);
-  n += println();
-  return n;
-}
-
-size_t Print::println(unsigned long num, int base)
-{
-  size_t n = print(num, base);
-  n += println();
-  return n;
-}
-
-size_t Print::println(double num, int digits)
-{
-  size_t n = print(num, digits);
-  n += println();
-  return n;
-}
-
  size_t Print::println(const Printable& x)
  {
    size_t n = print(x);
@@ -177,10 +162,15 @@ size_t Print::println(double num, int digits)
    return n;
  }
 
+size_t Print::println(const __FlashStringHelper* str)
+{
+  return println(reinterpret_cast<const char*>(str));
+}
+
 // Private Methods /////////////////////////////////////////////////////////////
 
 size_t Print::printNumber(unsigned long n, uint8_t base) {
-  char buf[8 * sizeof(long) + 1]; // Assumes 8-bit chars plus zero byte.
+  char buf[8 * sizeof(n) + 1]; // Assumes 8-bit chars plus zero byte.
   char *str = &buf[sizeof(buf) - 1];
 
   *str = '\0';
@@ -189,7 +179,27 @@ size_t Print::printNumber(unsigned long n, uint8_t base) {
   if (base < 2) base = 10;
 
   do {
-    unsigned long m = n;
+   decltype(n) m = n;
+   n /= base;
+   char c = m - base * n;
+   *--str = c < 10 ? c + '0' : c + 'A' - 10;
+  } while(n);
+
+  return write(str);
+}
+ 
+ size_t Print::printNumber(unsigned long long n, uint8_t base) {
+  char buf[8 * sizeof(n) + 1]; // Assumes 8-bit chars plus zero byte.
+
+  char *str = &buf[sizeof(buf) - 1];
+
+  *str = '\0';
+
+  // prevent crash if called with base == 1
+  if (base < 2) base = 10;
+
+  do {
+    decltype(n) m = n;
     n /= base;
     char c = m - base * n;
     *--str = c < 10 ? c + '0' : c + 'A' - 10;
@@ -198,59 +208,19 @@ size_t Print::printNumber(unsigned long n, uint8_t base) {
   return write(str);
 }
 
-size_t Print::printFloat(double number, uint8_t digits)
-{
-  size_t n = 0;
-
-  if (isnan(number)) return print("nan");
-  if (isinf(number)) return print("inf");
-  if (number > 4294967040.0) return print ("ovf");  // constant determined empirically
-  if (number <-4294967040.0) return print ("ovf");  // constant determined empirically
-
-  // Handle negative numbers
-  if (number < 0.0)
-  {
-     n += print('-');
-     number = -number;
-  }
-
-  // Round correctly so that print(1.999, 2) prints as "2.00"
-  double rounding = 0.5;
-  for (uint8_t i=0; i<digits; ++i)
-    rounding /= 10.0;
-
-  number += rounding;
-
-  // Extract the integer part of the number and print it
-  unsigned long int_part = (unsigned long)number;
-  double remainder = number - (double)int_part;
-  n += print(int_part);
-
-  // Print the decimal point, but only if there are digits beyond
-  if (digits > 0) {
-    n += print(".");
-  }
-
-  // Extract digits from the remainder one at a time
-  while (digits-- > 0)
-  {
-    remainder *= 10.0;
-    int toPrint = int(remainder);
-    n += print(toPrint);
-    remainder -= toPrint;
-  }
-
-  return n;
+size_t Print::printVariant(const Variant& var) {
+    JSONStreamWriter writer(*this);
+    writeVariant(var, writer);
+    return writer.bytesWritten();
 }
 
-size_t Print::printf_impl(bool newline, const char* format, ...)
+size_t Print::vprintf(bool newline, const char* format, va_list args)
 {
     const int bufsize = 20;
     char test[bufsize];
-    va_list marker;
-    va_start(marker, format);
-    size_t n = vsnprintf(test, bufsize, format, marker);
-    va_end(marker);
+    va_list args2;
+    va_copy(args2, args);
+    size_t n = vsnprintf(test, bufsize, format, args);
 
     if (n<bufsize)
     {
@@ -259,13 +229,29 @@ size_t Print::printf_impl(bool newline, const char* format, ...)
     else
     {
         char bigger[n+1];
-        va_start(marker, format);
-        n = vsnprintf(bigger, n+1, format, marker);
-        va_end(marker);
+        n = vsnprintf(bigger, n+1, format, args2);
         n = print(bigger);
     }
     if (newline)
         n += println();
+
+    va_end(args2);
     return n;
 }
 
+namespace particle {
+
+size_t OutputStringStream::write(const uint8_t* data, size_t size) {
+    if (getWriteError()) {
+        return 0;
+    }
+    size_t newSize = s_.length() + size;
+    if (s_.capacity() < newSize && !s_.reserve(std::max<size_t>({ newSize, s_.capacity() * 3 / 2, 20 }))) {
+        setWriteError(Error::NO_MEMORY);
+        return 0;
+    }
+    s_.concat((const char*)data, size);
+    return size;
+}
+
+} // namespace particle

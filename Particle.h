@@ -16,8 +16,11 @@
 
 #include "spark_wiring_flags.h"
 #include "spark_wiring_json.h"
+#include "spark_wiring_map.h"
 #include "spark_wiring_string.h"
 #include "spark_wiring_time.h"
+#include "spark_wiring_variant.h"
+#include "spark_wiring_vector.h"
 #include "rng_hal.h"
 #include "system_error.h"
 #include "system_tick_hal.h"

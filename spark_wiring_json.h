@@ -56,6 +56,9 @@ public:
 
     bool toBool() const;
     int toInt() const;
+    unsigned toUInt() const;
+    long long toInt64() const;
+    unsigned long long toUInt64() const;
     double toDouble() const;
     JSONString toString() const;
 
@@ -176,7 +179,9 @@ public:
     JSONWriter& value(int val);
     JSONWriter& value(unsigned val);
     JSONWriter& value(long val);
+    JSONWriter& value(long long val);
     JSONWriter& value(unsigned long val);
+    JSONWriter& value(unsigned long long val);
     JSONWriter& value(double val, int precision);
     JSONWriter& value(double val);
     JSONWriter& value(const char *val);
@@ -206,6 +211,7 @@ class JSONStreamWriter: public JSONWriter {
 public:
     explicit JSONStreamWriter(Print &stream);
 
+    size_t bytesWritten() const;
     Print* stream() const;
 
 protected:
@@ -213,6 +219,7 @@ protected:
 
 private:
     Print &strm_;
+    size_t bytesWritten_;
 };
 
 class JSONBufferWriter: public JSONWriter {
@@ -239,6 +246,12 @@ bool operator==(const String &str1, const JSONString &str2);
 bool operator!=(const String &str1, const JSONString &str2);
 
 } // namespace spark
+
+namespace particle {
+
+using namespace spark;
+
+} // namespace particle
 
 // spark::JSONValue
 inline spark::JSONValue::JSONValue() :
@@ -397,7 +410,12 @@ inline void spark::JSONWriter::write(char c) {
 
 // spark::JSONStreamWriter
 inline spark::JSONStreamWriter::JSONStreamWriter(Print &stream) :
-        strm_(stream) {
+        strm_(stream),
+        bytesWritten_(0) {
+}
+
+inline size_t spark::JSONStreamWriter::bytesWritten() const {
+    return bytesWritten_;
 }
 
 inline Print* spark::JSONStreamWriter::stream() const {
@@ -405,7 +423,7 @@ inline Print* spark::JSONStreamWriter::stream() const {
 }
 
 inline void spark::JSONStreamWriter::write(const char *data, size_t size) {
-    strm_.write((const uint8_t*)data, size);
+    bytesWritten_ += strm_.write((const uint8_t*)data, size);
 }
 
 // spark::JSONBufferWriter
