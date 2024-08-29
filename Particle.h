@@ -19,6 +19,7 @@
 #include "spark_wiring_string.h"
 #include "spark_wiring_time.h"
 #include "rng_hal.h"
+#include "system_error.h"
 #include "system_tick_hal.h"
 
 using namespace spark;

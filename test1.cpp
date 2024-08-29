@@ -5,5 +5,10 @@
 int main(int argc, char *argv[]) {
 	String foo = "test";
 	printf("%s\n", foo.c_str());
+
+	int err = 0;
+	if (err != SYSTEM_ERROR_NONE) {
+		printf("system errors not defined");
+	}
 	return 0;
 }
