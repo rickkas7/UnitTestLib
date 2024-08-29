@@ -21,6 +21,7 @@
 #include "spark_wiring_time.h"
 #include "spark_wiring_variant.h"
 #include "spark_wiring_vector.h"
+#include "logging.h"
 #include "rng_hal.h"
 #include "system_error.h"
 #include "system_tick_hal.h"
@@ -71,6 +72,7 @@ typedef enum LogLevel {
     LOG_LEVEL_PANIC = 60,
     LOG_LEVEL_NONE = 70 // Do not log any messages
 } LogLevel;
+#endif 
 
 class Logger {
 public:
@@ -190,7 +192,6 @@ public:
     String name;
 };
 // spark_wiring_logging.h
-#endif 
 
 extern const Logger Log;
 
