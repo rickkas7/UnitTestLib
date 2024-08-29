@@ -18,10 +18,13 @@
 #include "spark_wiring_json.h"
 
 #include <algorithm>
+#include <limits>
 
 #include <cstdio>
 #include <cstdlib>
 #include <cstdarg>
+#include <cctype>
+#include <cmath>
 
 namespace {
 
@@ -60,6 +63,16 @@ bool hexToInt(const char *s, size_t size, uint32_t *val) {
     }
     *val = v;
     return true;
+}
+
+double toFinite(double val) {
+    if (std::isnan(val)) {
+        return 0;
+    }
+    if (std::isinf(val)) {
+        return (val < 0) ? std::numeric_limits<double>::lowest() : std::numeric_limits<double>::max();
+    }
+    return val;
 }
 
 } // namespace
@@ -127,6 +140,60 @@ int spark::JSONValue::toInt() const {
         // compile-time dependency on strtod() optional
         const char* const s = d_->json + t_->start;
         return strtol(s, nullptr, 10);
+    }
+    default:
+        return 0;
+    }
+}
+
+unsigned spark::JSONValue::toUInt() const {
+    switch (type()) {
+    case JSON_TYPE_BOOL: {
+        const char* const s = d_->json + t_->start;
+        return *s == 't';
+    }
+    case JSON_TYPE_NUMBER:
+    case JSON_TYPE_STRING: {
+        // toInt() may produce incorrect results for floating point numbers, since we want to keep
+        // compile-time dependency on strtod() optional
+        const char* const s = d_->json + t_->start;
+        return strtoul(s, nullptr, 10);
+    }
+    default:
+        return 0;
+    }
+}
+
+long long spark::JSONValue::toInt64() const {
+    switch (type()) {
+    case JSON_TYPE_BOOL: {
+        const char* const s = d_->json + t_->start;
+        return *s == 't';
+    }
+    case JSON_TYPE_NUMBER:
+    case JSON_TYPE_STRING: {
+        // toInt() may produce incorrect results for floating point numbers, since we want to keep
+        // compile-time dependency on strtod() optional
+        const char* const s = d_->json + t_->start;
+        return strtoll(s, nullptr, 10);
+    }
+    default:
+        return 0;
+    }
+}
+
+unsigned long long spark::JSONValue::toUInt64() const {
+    switch (type()) {
+    case JSON_TYPE_BOOL: {
+        const char* const s = d_->json + t_->start;
+        return *s == 't';
+    }
+    case JSON_TYPE_NUMBER:
+    case JSON_TYPE_STRING: {
+        // toInt() may produce incorrect results for floating point numbers, since we want to keep
+        // compile-time dependency on strtod() optional
+        const char* const s = d_->json + t_->start;
+        return strtoull(s, nullptr, 10);
     }
     default:
         return 0;
@@ -476,16 +543,30 @@ spark::JSONWriter& spark::JSONWriter::value(unsigned long val) {
     return *this;
 }
 
+spark::JSONWriter& spark::JSONWriter::value(long long val) {
+    writeSeparator();
+    printf("%lld", val);
+    state_ = NEXT;
+    return *this;
+}
+
+spark::JSONWriter& spark::JSONWriter::value(unsigned long long val) {
+    writeSeparator();
+    printf("%llu", val);
+    state_ = NEXT;
+    return *this;
+}
+
 spark::JSONWriter& spark::JSONWriter::value(double val, int precision) {
     writeSeparator();
-    printf("%.*lf", precision, val);
+    printf("%.*lf", precision, toFinite(val)); // NaN and infinite values are not permitted by the spec
     state_ = NEXT;
     return *this;
 }
 
 spark::JSONWriter& spark::JSONWriter::value(double val) {
     writeSeparator();
-    printf("%g", val);
+    printf("%g", toFinite(val));
     state_ = NEXT;
     return *this;
 }
@@ -542,7 +623,7 @@ void spark::JSONWriter::writeEscaped(const char *str, size_t size) {
     const char *s = str;
     while (s != end) {
         const char c = *s;
-        if (c == '"' || c == '\\' || (c >= 0 && c <= 0x1f)) {
+        if (c == '"' || c == '\\' || !std::isprint((unsigned char)c)) {
             write(str, s - str); // Write preceeding characters
             write('\\');
             switch (c) {

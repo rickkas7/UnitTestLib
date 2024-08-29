@@ -16,8 +16,12 @@
 
 #include "spark_wiring_flags.h"
 #include "spark_wiring_json.h"
+#include "spark_wiring_map.h"
 #include "spark_wiring_string.h"
 #include "spark_wiring_time.h"
+#include "spark_wiring_variant.h"
+#include "spark_wiring_vector.h"
+#include "logging.h"
 #include "rng_hal.h"
 #include "system_error.h"
 #include "system_tick_hal.h"
@@ -57,7 +61,8 @@ public:
 #define WITH_LOCK(x)
 #define TRY_LOCK(x)
 
-
+#if 0
+// Now in logging.h
 typedef enum LogLevel {
     LOG_LEVEL_ALL = 1, // Log all messages
     LOG_LEVEL_TRACE = 1,
@@ -67,6 +72,7 @@ typedef enum LogLevel {
     LOG_LEVEL_PANIC = 60,
     LOG_LEVEL_NONE = 70 // Do not log any messages
 } LogLevel;
+#endif 
 
 class Logger {
 public:
@@ -186,6 +192,7 @@ public:
     String name;
 };
 // spark_wiring_logging.h
+
 extern const Logger Log;
 
 namespace particle { namespace protocol {
