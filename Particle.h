@@ -60,7 +60,8 @@ public:
 #define WITH_LOCK(x)
 #define TRY_LOCK(x)
 
-
+#if 0
+// Now in logging.h
 typedef enum LogLevel {
     LOG_LEVEL_ALL = 1, // Log all messages
     LOG_LEVEL_TRACE = 1,
@@ -189,6 +190,8 @@ public:
     String name;
 };
 // spark_wiring_logging.h
+#endif 
+
 extern const Logger Log;
 
 namespace particle { namespace protocol {
