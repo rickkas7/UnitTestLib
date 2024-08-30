@@ -17,6 +17,7 @@
 #include "spark_wiring_flags.h"
 #include "spark_wiring_json.h"
 #include "spark_wiring_map.h"
+#include "spark_wiring_stream.h"
 #include "spark_wiring_string.h"
 #include "spark_wiring_time.h"
 #include "spark_wiring_variant.h"
@@ -29,13 +30,6 @@
 using namespace spark;
 // using namespace particle;
 // using namespace std::literals::chrono_literals;
-
-class Stream {
-public:
-	inline int available() { return 0; }
-	inline int read() { return 0; }
-};
-
 
 // Doesn't actually work as we don't support threads in the gcclib, but makes it easier to compile code
 class Mutex
