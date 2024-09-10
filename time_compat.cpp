@@ -23,12 +23,12 @@ struct tm* localtime32_r(const time32_t* timep, struct tm* result) {
     if (!timep) {
         return nullptr;
     }
-    time_t tmp = *timep;
-    return localtime_r(&tmp, result);
+    time32_t tmp = *timep;
+    return localtime32_r(&tmp, result);
 }
 
 time32_t mktime32(struct tm* tm) {
-    return (time32_t)mktime(tm);
+    return (time32_t)mktime32(tm);
 }
 
 #endif // HAL_TIME_COMPAT_EXCLUDE
