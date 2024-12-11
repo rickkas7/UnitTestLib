@@ -1,6 +1,6 @@
 
 
-CFLAGS=-std=c++17
+CFLAGS=-std=c++17 -x c++
 
 libwiringgcc.a : helpers.o spark_wiring_json.o jsmn.o spark_wiring_print.o spark_wiring_stream.o spark_wiring_string.o spark_wiring_time.o spark_wiring_variant.o time_compat.o
 	ar rcs $@ $^

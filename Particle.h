@@ -16,6 +16,7 @@
 
 #include "spark_wiring_flags.h"
 #include "spark_wiring_json.h"
+#include "spark_wiring_ledger.h"
 #include "spark_wiring_map.h"
 #include "spark_wiring_stream.h"
 #include "spark_wiring_string.h"
@@ -185,6 +186,47 @@ public:
 
     String name;
 };
+
+class LogCategoryFilter {
+public:
+    LogCategoryFilter(String category, LogLevel level);
+    LogCategoryFilter(const char *category, LogLevel level);
+    LogCategoryFilter(const char *category, size_t length, LogLevel level);
+
+    const char* category() const;
+    LogLevel level() const;
+
+private:
+    String cat_;
+    LogLevel level_;
+
+    // friend class detail::LogFilter;
+};
+
+inline LogCategoryFilter::LogCategoryFilter(String category, LogLevel level) :
+        cat_(category),
+        level_(level) {
+}
+
+inline LogCategoryFilter::LogCategoryFilter(const char *category, LogLevel level) :
+        cat_(category),
+        level_(level) {
+}
+
+inline LogCategoryFilter::LogCategoryFilter(const char *category, size_t length, LogLevel level) :
+        cat_(category, length),
+        level_(level) {
+}
+
+inline const char* LogCategoryFilter::category() const {
+    return cat_.c_str();
+}
+
+inline LogLevel LogCategoryFilter::level() const {
+    return level_;
+}
+typedef Vector<LogCategoryFilter> LogCategoryFilters;
+
 // spark_wiring_logging.h
 
 extern const Logger Log;
